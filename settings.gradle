@@ -1,0 +1,2 @@
+rootProject.name = "MyRedDot"
+include ':app'
