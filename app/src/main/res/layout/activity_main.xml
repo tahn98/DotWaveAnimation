@@ -7,16 +7,12 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
-    <com.example.myreddot.DotWave
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:id="@+id/content"
-        app:dw_radius="2dp"
-        app:dw_size="4dp"
-        app:dw_alpha="1"
-        app:dw_rippleAmount="2"
-        app:dw_duration="1000"
-        app:dw_scale="4">
-    </com.example.myreddot.DotWave>
+    <com.example.myreddot.ShapeRipple
+        android:id="@+id/ripple"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:ripple_maximum_radius="30dp"
+        app:ripple_stroke_width="10dp"
+        app:enable_color_transition="true"/>
 
 </LinearLayout>

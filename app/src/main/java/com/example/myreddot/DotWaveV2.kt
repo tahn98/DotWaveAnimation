@@ -11,12 +11,13 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.RelativeLayout
+import com.example.myreddot.model.BaseShape
 import java.util.*
 
 /**
  * Created by tahn on 31/08/2021.
  */
-class DotWave : View {
+class DotWaveV2 : View {
     private var mDotWaveColor = DEFAULT_COLOR
     private var mStrokeWidth = 0f
     private var mWaveRadius = 0f
@@ -35,6 +36,7 @@ class DotWave : View {
         private set
     private var animatorSet: AnimatorSet? = null
     private var animatorList: ArrayList<Animator>? = null
+//    private var waveLayoutParams: LayoutParams? = null
     private val waveList = ArrayList<RippleView>()
 
     constructor(context: Context?) : super(context)
@@ -97,6 +99,7 @@ class DotWave : View {
 
         for (i in 0 until mWaveAmount) {
             val rippleView = RippleView(getContext())
+//            addView(rippleView, waveLayoutParams)
             waveList.add(rippleView)
             val scaleXAnimator = ObjectAnimator.ofFloat(rippleView, "ScaleX", 1f, mWaveScale)
             scaleXAnimator.repeatCount = ObjectAnimator.INFINITE
@@ -123,14 +126,22 @@ class DotWave : View {
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+        val baseShape = BaseShape();
+        baseShape.onDraw(
+            canvas!!,
+            0,
+            0,
+            30f,
+            Color.RED,
+            0,
+            shapePaint = mPaint!!
+        )
 
-        for (view in waveList) {
-            view.draw(canvas)
-        }
+//        val rippleView = RippleView(getContext())
     }
 
     private inner class RippleView(context: Context?) : View(context) {
-        public override fun onDraw(canvas: Canvas) {
+        override fun onDraw(canvas: Canvas) {
             val radius = width.coerceAtMost(height) / 2
             canvas.drawCircle(
                 radius.toFloat(), radius.toFloat(), radius - mStrokeWidth,
@@ -143,49 +154,49 @@ class DotWave : View {
         }
     }
 
-    inner class CircleView : View {
-        private var circleColor = Color.RED
-        private var paint: Paint? = null
-
-        constructor(context: Context) : super(context) {
-            init(context, null)
-        }
-
-        constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-            init(context, attrs)
-        }
-
-        private fun init(context: Context, attrs: AttributeSet?) {
-            paint = Paint()
-            paint?.isAntiAlias = true
-        }
-
-        fun setCircleColor(circleColor: Int) {
-            this.circleColor = circleColor
-            invalidate()
-        }
-
-        fun getCircleColor(): Int {
-            return circleColor
-        }
-
-        public override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            val w = mWaveSize
-            val h = mWaveSize
-            val pl = paddingLeft
-            val pr = paddingRight
-            val pt = paddingTop
-            val pb = paddingBottom
-            val usableWidth = w - (pl + pr)
-            val usableHeight = h - (pt + pb)
-            val radius = usableWidth.coerceAtMost(usableHeight) / 2
-            val cx = pl + usableWidth / 2
-            val cy = pt + usableHeight / 2
-            paint?.color = circleColor
-            canvas.drawCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), paint!!)
-        }
-    }
+//    inner class CircleView : View {
+//        private var circleColor = Color.RED
+//        private var paint: Paint? = null
+//
+//        constructor(context: Context) : super(context) {
+//            init(context, null)
+//        }
+//
+//        constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+//            init(context, attrs)
+//        }
+//
+//        private fun init(context: Context, attrs: AttributeSet?) {
+//            paint = Paint()
+//            paint?.isAntiAlias = true
+//        }
+//
+//        fun setCircleColor(circleColor: Int) {
+//            this.circleColor = circleColor
+//            invalidate()
+//        }
+//
+//        fun getCircleColor(): Int {
+//            return circleColor
+//        }
+//
+//        override fun onDraw(canvas: Canvas) {
+//            super.onDraw(canvas)
+//            val w = mWaveSize
+//            val h = mWaveSize
+//            val pl = paddingLeft
+//            val pr = paddingRight
+//            val pt = paddingTop
+//            val pb = paddingBottom
+//            val usableWidth = w - (pl + pr)
+//            val usableHeight = h - (pt + pb)
+//            val radius = usableWidth.coerceAtMost(usableHeight) / 2
+//            val cx = pl + usableWidth / 2
+//            val cy = pt + usableHeight / 2
+//            paint?.color = circleColor
+//            canvas.drawCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), paint!!)
+//        }
+//    }
 
     fun startRippleAnimation() {
         if (!isRippleAnimationRunning) {

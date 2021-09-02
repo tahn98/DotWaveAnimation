@@ -6,11 +6,13 @@ import androidx.appcompat.app.AppCompatActivity
 
 
 class MainActivity : AppCompatActivity() {
+    private var ripple: ShapeRipple? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val dotWave = findViewById<View>(R.id.content) as DotWave
-        dotWave.startRippleAnimation()
+        ripple = findViewById(R.id.ripple)
+//        findViewById<DotWaveV2>(R.id.content).startRippleAnimation()
     }
 }
