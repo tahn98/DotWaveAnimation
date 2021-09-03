@@ -21,7 +21,7 @@ import java.util.*
  * created by @tahn on 02-sep-2021
  * ref : https://github.com/poldz123/ShapeRipple
  */
-class ShapeRipple : View, LifecycleObserver {
+class ShapeRipple : View {
 
     private var dotColor = 0
     private var dotSize = 0
