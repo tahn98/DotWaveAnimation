@@ -1,87 +1,65 @@
-package com.example.myreddot.shapeRipple;
+package com.example.myreddot.shapeRipple
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.os.Build;
-import android.os.Bundle;
+import android.annotation.TargetApi
+import android.app.Activity
+import android.app.Application.ActivityLifecycleCallbacks
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.Build
+import android.os.Bundle
 
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-class LifeCycleManager implements Application.ActivityLifecycleCallbacks {
+internal class LifeCycleManager(private val shapeRipple: ShapeRipple?) : ActivityLifecycleCallbacks {
+    private var activity: Activity? = null
 
-    private ShapeRipple shapeRipple;
-    private Activity activity;
-
-    LifeCycleManager(ShapeRipple shapeRipple) {
-        this.shapeRipple = shapeRipple;
-    }
-
-    void attachListener() {
+    fun attachListener() {
         if (shapeRipple == null) {
-            return;
+            return
         }
-
-        activity = getActivity(shapeRipple.getContext());
-        activity.getApplication().registerActivityLifecycleCallbacks(this);
+        activity = getActivity(shapeRipple.context)
+        activity?.application?.registerActivityLifecycleCallbacks(this)
     }
 
-    private void detachListener() {
+    private fun detachListener() {
         if (activity == null) {
-            return;
+            return
         }
-
-        activity.getApplication().unregisterActivityLifecycleCallbacks(this);
+        activity?.application?.unregisterActivityLifecycleCallbacks(this)
     }
 
-    @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {}
-
-    @Override
-    public void onActivityStarted(Activity activity) {}
-
-    @Override
-    public void onActivityResumed(Activity activity) {
-        if (shapeRipple == null || this.activity != activity) {
-            return;
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityStarted(activity: Activity) {}
+    override fun onActivityResumed(activity: Activity) {
+        if (shapeRipple == null || this.activity !== activity) {
+            return
         }
-
-        shapeRipple.restartRipple();
+        shapeRipple.restartRipple()
     }
 
-    @Override
-    public void onActivityPaused(Activity activity) {
-        if (shapeRipple == null || this.activity != activity) {
-            return;
+    override fun onActivityPaused(activity: Activity) {
+        if (shapeRipple == null || this.activity !== activity) {
+            return
         }
-
-        shapeRipple.stop();
+        shapeRipple.stop()
     }
 
-    @Override
-    public void onActivityStopped(Activity activity) {}
-
-    @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
-
-    @Override
-    public void onActivityDestroyed(Activity activity) {
-        if (this.activity != activity) {
-            return;
+    override fun onActivityStopped(activity: Activity) {}
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+    override fun onActivityDestroyed(activity: Activity) {
+        if (this.activity !== activity) {
+            return
         }
-
-        detachListener();
+        detachListener()
     }
 
-    private Activity getActivity(Context context) {
-        while (context instanceof ContextWrapper) {
-            if (context instanceof Activity) {
-                return (Activity) context;
+    private fun getActivity(context: Context): Activity {
+        var ctx: Context? = context
+        while (ctx is ContextWrapper) {
+            if (ctx is Activity) {
+                return ctx
             }
-            context = ((ContextWrapper) context).getBaseContext();
+            ctx = ctx.baseContext
         }
-
-        throw new IllegalArgumentException("Context does not derived from any activity, Do not use the Application Context!!");
+        throw IllegalArgumentException("Context does not derived from any activity, Do not use the Application Context!!")
     }
 }
