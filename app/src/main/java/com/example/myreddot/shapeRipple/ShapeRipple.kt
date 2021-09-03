@@ -1,4 +1,4 @@
-package com.example.myreddot
+package com.example.myreddot.shapeRipple
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -6,21 +6,25 @@ import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.Interpolator
 import android.view.animation.LinearInterpolator
-import com.example.myreddot.data.ShapeRippleEntry
-import com.example.myreddot.model.BaseShape
+import androidx.lifecycle.LifecycleObserver
+import com.example.myreddot.R
+import com.example.myreddot.shapeRipple.data.CircleShape
+import com.example.myreddot.shapeRipple.data.ShapeRippleEntry
+import com.example.myreddot.shapeRipple.util.ShapePulseUtil
 import java.util.*
 
 /**
  * created by @tahn on 02-sep-2021
  * ref : https://github.com/poldz123/ShapeRipple
  */
-class ShapeRipple : View {
+class ShapeRipple : View, LifecycleObserver {
 
+    private var dotColor = 0
+    private var dotSize = 0
     private var rippleColor = 0
     private var rippleFromColor = 0
     private var rippleToColor = 0
@@ -40,16 +44,16 @@ class ShapeRipple : View {
         set(enableStrokeStyle) {
             field = enableStrokeStyle
             if (enableStrokeStyle) {
-                shapePaint!!.style = Paint.Style.STROKE
+                shapePaint.style = Paint.Style.STROKE
             } else {
-                shapePaint!!.style = Paint.Style.FILL
+                shapePaint.style = Paint.Style.FILL
             }
         }
     private lateinit var shapeRippleEntries: LinkedList<ShapeRippleEntry>
     private var rippleValueAnimator: ValueAnimator? = null
     private lateinit var rippleInterpolator: Interpolator
-    private var rippleShape: BaseShape? = null
-    private var shapePaint: Paint? = null
+    private var rippleShape: CircleShape? = null
+    private lateinit var shapePaint: Paint
     private var isStopped = false
     private var lifeCycleManager: LifeCycleManager? = null
 
@@ -71,13 +75,17 @@ class ShapeRipple : View {
 
     private fun init(context: Context, attrs: AttributeSet?) {
 
+        if(isInEditMode){
+            return
+        }
+
         // initialize the paint for the shape ripple
         shapePaint = Paint()
-        shapePaint?.isAntiAlias = true
-        shapePaint?.isDither = true
-        shapePaint?.style = Paint.Style.FILL
+        shapePaint.isAntiAlias = true
+        shapePaint.isDither = true
+        shapePaint.style = Paint.Style.FILL
         shapeRippleEntries = LinkedList()
-        rippleShape = BaseShape()
+        rippleShape = CircleShape()
         rippleColor = DEFAULT_RIPPLE_COLOR
         rippleFromColor = DEFAULT_RIPPLE_FROM_COLOR
         rippleToColor = DEFAULT_RIPPLE_TO_COLOR
@@ -87,38 +95,39 @@ class ShapeRipple : View {
         rippleInterpolator = LinearInterpolator()
 
         if (attrs != null) {
-            val ta = context.obtainStyledAttributes(attrs, R.styleable.ConnectingRipple, 0, 0)
+            val ta = context.obtainStyledAttributes(attrs, R.styleable.ShapeRipple, 0, 0)
             try {
-                rippleColor =
-                    ta.getColor(R.styleable.ConnectingRipple_ripple_color, DEFAULT_RIPPLE_COLOR)
+                dotColor = ta.getColor(R.styleable.ShapeRipple_dot_color, DOT_COLOR)
+                dotSize = ta.getDimensionPixelSize(R.styleable.ShapeRipple_dot_size, R.dimen.dotSize)
+                rippleColor = ta.getColor(R.styleable.ShapeRipple_ripple_color, DEFAULT_RIPPLE_COLOR)
                 rippleFromColor = ta.getColor(
-                    R.styleable.ConnectingRipple_ripple_from_color,
+                    R.styleable.ShapeRipple_ripple_from_color,
                     DEFAULT_RIPPLE_FROM_COLOR
                 )
                 rippleToColor = ta.getColor(
-                    R.styleable.ConnectingRipple_ripple_to_color,
+                    R.styleable.ShapeRipple_ripple_to_color,
                     DEFAULT_RIPPLE_TO_COLOR
                 )
                 setRippleDuration(
                     ta.getInteger(
-                        R.styleable.ConnectingRipple_ripple_duration,
+                        R.styleable.ShapeRipple_ripple_duration,
                         DEFAULT_RIPPLE_DURATION
                     )
                 )
                 isEnableColorTransition =
-                    ta.getBoolean(R.styleable.ConnectingRipple_enable_color_transition, true)
+                    ta.getBoolean(R.styleable.ShapeRipple_enable_color_transition, true)
                 enableSingleRipple =
-                    ta.getBoolean(R.styleable.ConnectingRipple_enable_single_ripple, false)
+                    ta.getBoolean(R.styleable.ShapeRipple_enable_single_ripple, false)
                 rippleMaximumRadius = ta.getDimensionPixelSize(
-                    R.styleable.ConnectingRipple_ripple_maximum_radius,
+                    R.styleable.ShapeRipple_ripple_maximum_radius,
                     NO_VALUE
                 ).toFloat()
-                rippleCount = ta.getInteger(R.styleable.ConnectingRipple_ripple_count, NO_VALUE)
+                rippleCount = ta.getInteger(R.styleable.ShapeRipple_ripple_count, NO_VALUE)
                 isEnableStrokeStyle =
-                    ta.getBoolean(R.styleable.ConnectingRipple_enable_stroke_style, false)
+                    ta.getBoolean(R.styleable.ShapeRipple_enable_stroke_style, false)
                 setRippleStrokeWidth(
                     ta.getDimensionPixelSize(
-                        R.styleable.ConnectingRipple_ripple_stroke_width,
+                        R.styleable.ShapeRipple_ripple_stroke_width,
                         resources.getDimensionPixelSize(R.dimen.default_stroke_width)
                     )
                 )
@@ -130,30 +139,30 @@ class ShapeRipple : View {
         start(rippleDuration)
 
         // Only attach the activity for ICE_CREAM_SANDWICH and up
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            lifeCycleManager = LifeCycleManager(this)
-            lifeCycleManager!!.attachListener()
-        }
+        // stop ripple and restart when onPause
+        lifeCycleManager =
+            LifeCycleManager(this)
+        lifeCycleManager?.attachListener()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        drawDot(canvas)
-
         for (shapeRippleEntry in shapeRippleEntries) {
             if (shapeRippleEntry.isRender) {
-                shapeRippleEntry.baseShape?.onDraw(
+                shapeRippleEntry.circleShape?.onDraw(
                     canvas,
                     shapeRippleEntry.x,
                     shapeRippleEntry.y,
                     shapeRippleEntry.radiusSize,
                     shapeRippleEntry.changingColorValue,
                     shapeRippleEntry.rippleIndex,
-                    shapePaint!!
+                    shapePaint
                 )
             }
         }
+
+        drawDot(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -181,21 +190,21 @@ class ShapeRipple : View {
             canvas,
             width / 2,
             height / 2,
-            10f,
-            Color.RED,
-            0,
-            shapePaint!!
+            dotSize.toFloat(),
+            dotColor,
+            -1,
+            shapePaint
         )
     }
 
     /**
      * This method will initialize the list of [ShapeRippleEntry] with
-     * initial position, color, index, and multiplier value.)
+     * initial position, color, index, and multiplier value...)
      *
      * @param shapeRipple the renderer of shape ripples
      */
-    private fun initializeEntries(shapeRipple: BaseShape?) {
-        shapePaint?.strokeWidth = rippleStrokeWidth.toFloat()
+    private fun initializeEntries(shapeRipple: CircleShape?) {
+        shapePaint.strokeWidth = rippleStrokeWidth.toFloat()
         if (viewWidth == 0 && viewHeight == 0) {
             return
         }
@@ -219,7 +228,6 @@ class ShapeRipple : View {
             shapeRippleEntry.originalColorValue = rippleColor
             shapeRippleEntries.add(shapeRippleEntry)
 
-            // we only render 1 ripple when it is enabled
             if (enableSingleRipple) {
                 break
             }
@@ -231,18 +239,15 @@ class ShapeRipple : View {
      * This will only execute after the [.initializeEntries], this is safe to call before it.
      */
     private fun reconfigureEntries() {
-
-        // do not re configure when dimension is not calculated
-        // or if the list is empty
         if (viewWidth == 0 && viewHeight == 0 && (shapeRippleEntries.size == 0)) {
             return
         }
 
         // sets the stroke width of the ripple
-        shapePaint?.strokeWidth = rippleStrokeWidth.toFloat()
-        for (shapeRippleEntry in shapeRippleEntries!!) {
+        shapePaint.strokeWidth = rippleStrokeWidth.toFloat()
+        for (shapeRippleEntry in shapeRippleEntries) {
             shapeRippleEntry.originalColorValue = rippleColor
-            shapeRippleEntry.baseShape = rippleShape
+            shapeRippleEntry.circleShape = rippleShape
         }
     }
 
@@ -250,7 +255,6 @@ class ShapeRipple : View {
      * Start the [.rippleValueAnimator] with specified duration for each ripple.
      */
     private fun start(millis: Int) {
-
         // Do a ripple value renderer
         rippleValueAnimator = ValueAnimator.ofFloat(0f, 1f)
         rippleValueAnimator?.duration = millis.toLong()
@@ -276,7 +280,6 @@ class ShapeRipple : View {
      */
     private fun render(multiplierValue: Float) {
 
-        // Do not render when entries are empty
         if (shapeRippleEntries.size == 0) {
             return
         }
@@ -404,7 +407,6 @@ class ShapeRipple : View {
         startRipple()
     }
 
-
     fun getRippleMaximumRadius(): Float {
         return maxRippleRadius.toFloat()
     }
@@ -443,17 +445,14 @@ class ShapeRipple : View {
         return rippleInterpolator
     }
 
-    fun getRippleShape(): BaseShape? {
+    fun getRippleShape(): CircleShape? {
         return rippleShape
     }
 
 
     /**
      * Change the maximum size of the ripple, default to the size of the layout.
-     *
-     *
      * Value must be greater than 1
-     *
      * @param rippleMaximumRadius The floating ripple interval for each ripple
      */
     fun setRippleMaximumRadius(rippleMaximumRadius: Float) {
@@ -464,7 +463,6 @@ class ShapeRipple : View {
 
     /**
      * Enables the single ripple rendering
-     *
      * @param enableSingleRipple flag for enabling single ripple
      */
     fun setEnableSingleRipple(enableSingleRipple: Boolean) {
@@ -474,7 +472,6 @@ class ShapeRipple : View {
 
     /**
      * Change the stroke width for each ripple
-     *
      * @param rippleStrokeWidth The stroke width in pixel
      */
     fun setRippleStrokeWidth(rippleStrokeWidth: Int) {
@@ -484,7 +481,6 @@ class ShapeRipple : View {
 
     /**
      * Change the base color of each ripple
-     *
      * @param rippleColor The ripple color
      */
     fun setRippleColor(rippleColor: Int) {
@@ -493,7 +489,6 @@ class ShapeRipple : View {
 
     /**
      * Change the base color of each ripple
-     *
      * @param rippleColor The ripple color
      * @param instant     flag for when changing color is instant without delay
      */
@@ -506,7 +501,6 @@ class ShapeRipple : View {
 
     /**
      * Change the starting color of the color transition
-     *
      * @param rippleFromColor The starting color
      */
     fun setRippleFromColor(rippleFromColor: Int) {
@@ -515,7 +509,6 @@ class ShapeRipple : View {
 
     /**
      * Change the starting color of the color transition
-     *
      * @param rippleFromColor The starting color
      * @param instant         flag for when changing color is instant without delay
      */
@@ -528,7 +521,6 @@ class ShapeRipple : View {
 
     /**
      * Change the end color of the color transition
-     *
      * @param rippleToColor The end color
      */
     fun setRippleToColor(rippleToColor: Int) {
@@ -537,7 +529,6 @@ class ShapeRipple : View {
 
     /**
      * Change the end color of the color transition
-     *
      * @param rippleToColor The end color
      * @param instant       flag for when changing color is instant without delay
      */
@@ -550,7 +541,6 @@ class ShapeRipple : View {
 
     /**
      * Change the ripple duration of the animator
-     *
      * @param millis The duration in milliseconds
      */
     fun setRippleDuration(millis: Int) {
@@ -565,7 +555,6 @@ class ShapeRipple : View {
 
     /**
      * Change the [Interpolator] of the animator
-     *
      * @param rippleInterpolator The interpolator
      */
     fun setRippleInterpolator(rippleInterpolator: Interpolator?) {
@@ -578,7 +567,6 @@ class ShapeRipple : View {
     /**
      * Change the number of ripples, default value is calculated based on the
      * layout_width / ripple_width.
-     *
      * @param rippleCount The number of ripples
      */
     fun setRippleCount(rippleCount: Int) {
@@ -594,7 +582,7 @@ class ShapeRipple : View {
      *
      * @param rippleShape The renderer of shapes ripple
      */
-    fun setRippleShape(rippleShape: BaseShape?) {
+    fun setRippleShape(rippleShape: CircleShape?) {
         this.rippleShape = rippleShape
         reconfigureEntries()
     }
@@ -602,24 +590,11 @@ class ShapeRipple : View {
     companion object {
         val TAG = ShapeRipple::class.java.simpleName
         private const val NO_VALUE = 0
-
-        /**
-         * Debug logging flag for the library
-         */
-        var DEBUG = false
-
+        private const val DOT_COLOR = Color.RED
         private val DEFAULT_RIPPLE_COLOR = Color.parseColor("#FFF44336")
-
         private val DEFAULT_RIPPLE_FROM_COLOR = Color.parseColor("#FFF44336")
-
         private val DEFAULT_RIPPLE_TO_COLOR = Color.parseColor("#00FFFFFF")
-
         private const val DEFAULT_RIPPLE_DURATION = 1500
-
         private const val DEFAULT_RIPPLE_INTERVAL_FACTOR = 1f
-
-        fun enableDebugging() {
-            DEBUG = true
-        }
     }
 }

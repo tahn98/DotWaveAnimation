@@ -14,30 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.myreddot;
-
-import android.content.Context;
-import android.graphics.Color;
-
-import java.util.ArrayList;
+package com.example.myreddot.shapeRipple.util;
 
 public class ShapePulseUtil {
-
-    /**
-     * The default color for random colors
-     */
-    private static final int[] DEFAULT_RANDOM_COLOUR_SEQUENCE = {
-            Color.parseColor("#673AB7"),
-            Color.parseColor("#3F51B5"),
-            Color.parseColor("#2196F3"),
-            Color.parseColor("#03A9F4"),
-            Color.parseColor("#00BCD4"),
-            Color.parseColor("#009688"),
-            Color.parseColor("#8BC34A"),
-            Color.parseColor("#4CAF50"),
-            Color.parseColor("#FF5722"),
-            Color.parseColor("#F44336")};
-
     /**
      * Calculate the current color by the current fraction value.
      *
@@ -62,22 +41,4 @@ public class ShapePulseUtil {
                 ((startG + (int) (fraction * (endG - startG))) << 8) |
                 ((startB + (int) (fraction * (endB - startB))));
     }
-
-    /**
-     * Generate a list of random colors based on {@link #DEFAULT_RANDOM_COLOUR_SEQUENCE} colors
-     *
-     * @param context The context of the application
-     * @return The list of colors
-     */
-    public static ArrayList<Integer> generateRandomColours(Context context) {
-        ArrayList<Integer> randomColours = new ArrayList<>();
-
-        for (Integer color : DEFAULT_RANDOM_COLOUR_SEQUENCE) {
-            randomColours.add(color);
-        }
-
-        return randomColours;
-    }
-
-
 }

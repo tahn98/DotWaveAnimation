@@ -1,4 +1,4 @@
-package com.example.myreddot;
+package com.example.myreddot.shapeRipple;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -8,14 +8,6 @@ import android.content.ContextWrapper;
 import android.os.Build;
 import android.os.Bundle;
 
-
-/**
- * This is a controller for ICE_CREAM_SANDWICH and up, where is handles the activity life cycle.
- * Each call to {@link Activity#onPause()} will stop the ripple and restart it when it call the
- * {@link Activity#onResume()}.
- * <p>
- * We make sure that the listener is detached when activity has been destroyed.s
- */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 class LifeCycleManager implements Application.ActivityLifecycleCallbacks {
 

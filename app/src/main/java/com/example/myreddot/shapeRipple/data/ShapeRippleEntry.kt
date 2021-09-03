@@ -1,10 +1,10 @@
-package com.example.myreddot.data
+package com.example.myreddot.shapeRipple.data
 
 import android.graphics.Color
-import com.example.myreddot.model.BaseShape
+import com.example.myreddot.shapeRipple.data.CircleShape
 
 class ShapeRippleEntry(
-    var baseShape: BaseShape?
+    var circleShape: CircleShape?
 ) {
     var isRender = false
     var radiusSize = 0f

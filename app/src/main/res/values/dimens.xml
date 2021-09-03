@@ -3,5 +3,6 @@
     <dimen name="rippleStrokeWidth">2dp</dimen>
     <dimen name="rippleRadius">64dp</dimen>
     <dimen name="default_stroke_width">15dp</dimen>
+    <dimen name="dotSize">10dp</dimen>
 
 </resources>

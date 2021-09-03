@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <com.example.myreddot.ShapeRipple
+    <com.example.myreddot.shapeRipple.ShapeRipple
         android:id="@+id/ripple"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:ripple_maximum_radius="30dp"
-        app:ripple_stroke_width="10dp"
-        app:enable_color_transition="true"/>
+        app:enable_color_transition="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:ripple_maximum_radius="12dp"
+        app:ripple_stroke_width="4dp"
+        app:ripple_duration="800"
+        app:ripple_count="3"
+        app:dot_size="4dp"/>
 
-</LinearLayout>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/bt_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:text="@string/text"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

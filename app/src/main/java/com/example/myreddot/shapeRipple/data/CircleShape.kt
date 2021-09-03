@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.myreddot.model
+package com.example.myreddot.shapeRipple.data
 
 import android.graphics.Canvas
 import android.graphics.Paint
 
-class BaseShape {
+class CircleShape {
     var width = 0
     var height = 0
     fun onDraw(
